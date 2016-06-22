@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"html/template"
+	"io"
 	"net/http"
 	"strings"
 
@@ -235,6 +238,54 @@ func extractInterests(doc *goquery.Document) ([]goresume.Interest, error) {
 	return interests, nil
 }
 
+func resumeForURL(url string) (goresume.Resume, error) {
+	var resume goresume.Resume
+
+	doc, err := goquery.NewDocument(url)
+	if err != nil {
+		return resume, err
+	}
+
+	basic, err := extractBasicInfo(doc)
+	if err != nil {
+		return resume, err
+	}
+
+	works, err := extractWorks(doc)
+	if err != nil {
+		return resume, err
+	}
+
+	educations, err := extractEducations(doc)
+	if err != nil {
+		return resume, err
+	}
+
+	skills, err := extractSkills(doc)
+	if err != nil {
+		return resume, err
+	}
+
+	languages, err := extractLanguages(doc)
+	if err != nil {
+		return resume, err
+	}
+
+	interests, err := extractInterests(doc)
+	if err != nil {
+		return resume, err
+	}
+
+	resume.BasicInformation = basic
+	resume.WorkExperience = works
+	resume.EducationHistory = educations
+	resume.Skills = skills
+	resume.Languages = languages
+	resume.Interests = interests
+
+	return resume, nil
+}
+
 func main() {
 	port := flag.String("port", "8080", "port to listen on")
 	flag.Parse()
@@ -248,51 +299,57 @@ func main() {
 			json.NewEncoder(w).Encode(map[string]string{"error": "missing URL"})
 		}
 
-		doc, err := goquery.NewDocument(url)
+		resume, err := resumeForURL(url)
 		if err != nil {
-			return err
+			w.WriteHeader(500)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		}
-
-		basic, err := extractBasicInfo(doc)
-		if err != nil {
-			return err
-		}
-
-		works, err := extractWorks(doc)
-		if err != nil {
-			return err
-		}
-
-		educations, err := extractEducations(doc)
-		if err != nil {
-			return err
-		}
-
-		skills, err := extractSkills(doc)
-		if err != nil {
-			return err
-		}
-
-		languages, err := extractLanguages(doc)
-		if err != nil {
-			return err
-		}
-
-		interests, err := extractInterests(doc)
-		if err != nil {
-			return err
-		}
-
-		var resume goresume.Resume
-		resume.BasicInformation = basic
-		resume.WorkExperience = works
-		resume.EducationHistory = educations
-		resume.Skills = skills
-		resume.Languages = languages
-		resume.Interests = interests
 
 		return json.NewEncoder(w).Encode(resume)
 	})).Methods("GET")
+
+	r.HandleFunc("/resume", errHandler(func(w http.ResponseWriter, r *http.Request) error {
+		var body struct {
+			URL   string
+			Theme string
+		}
+		body.URL = r.FormValue("url")
+		body.Theme = r.FormValue("theme")
+
+		resume, err := resumeForURL(body.URL)
+		if err != nil {
+			w.WriteHeader(500)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		}
+
+		var postBody bytes.Buffer
+		if err := json.NewEncoder(&postBody).Encode(map[string]goresume.Resume{"resume": resume}); err != nil {
+			return err
+		}
+
+		resp, err := http.Post(
+			fmt.Sprintf("http://themes.jsonresume.org/theme/%s", body.Theme),
+			"application/json",
+			&postBody,
+		)
+		if err != nil {
+			return err
+		}
+
+		w.WriteHeader(resp.StatusCode)
+		io.Copy(w, resp.Body)
+		return nil
+	})).Methods("POST")
+
+	r.HandleFunc("/", errHandler(func(w http.ResponseWriter, r *http.Request) error {
+		temp, err := template.ParseFiles("./index.html.tmpl")
+		if err != nil {
+			return err
+		}
+
+		return temp.Execute(w, nil)
+	}))
+
 	http.Handle("/", r)
 	http.ListenAndServe(":"+*port, nil)
 }
