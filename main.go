@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 
@@ -79,6 +80,7 @@ func extractBasicInfo(doc *goquery.Document) (goresume.Basic, error) {
 	}
 
 	basic.Location.Region = strings.TrimSpace(region.Text())
+	basic.Profiles = []goresume.Profile{} // Some themes break if this isn't set
 
 	return basic, nil
 }
@@ -346,6 +348,7 @@ func main() {
 			return err
 		}
 
+		log.Printf("posting resume %#v", resume)
 		resp, err := http.Post(
 			fmt.Sprintf("http://themes.jsonresume.org/theme/%s", body.Theme),
 			"application/json",
