@@ -135,6 +135,7 @@ func extractWork(s *goquery.Selection) (goresume.Work, error) {
 	}
 
 	work.Summary = strings.TrimSpace(summary.Text())
+	work.Highlights = []string{} // Some themes require this to exist
 
 	return work, nil
 }
@@ -284,6 +285,16 @@ func resumeForURL(url string) (goresume.Resume, error) {
 	resume.Skills = skills
 	resume.Languages = languages
 	resume.Interests = interests
+
+	resume.BasicInformation.Profiles = append(resume.BasicInformation.Profiles, goresume.Profile{
+		Network: "LinkedIn",
+		URL:     url,
+	})
+
+	// Some themes require these
+	resume.VolunteerExperience = []goresume.Volunteer{}
+	resume.Awards = []goresume.Award{}
+	resume.Publications = []goresume.Publication{}
 
 	return resume, nil
 }
