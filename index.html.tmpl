@@ -3,15 +3,27 @@
     <title>
       LinkedIn Resume Generator
     </title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
   </head>
   <body>
-    <form action="/resume" method="POST">
-      <input type="text" name="url" value="https://www.linkedin.com/in/azylman" />
-      {{ range .Themes }}
-      <input type="radio" name="theme" value={{ . }} /> {{ . }}
-      {{ end }}
-      <input type="submit" value="Generate resume">
-    </form>
+    <div class="container">
+      <h1>LinkedIn Resume Generator</h1>
+      <form action="/resume" method="POST">
+        <label>LinkedIn profile URL</label>
+        <input type="text" class="form-control" placeholder="LinkedIn profile URL" name="url" value="https://www.linkedin.com/in/azylman" />
+        <br/>
+        <label>Theme</label><br/>
+        {{ range $index, $element := .Themes }}
+          {{ if eq $index 0 }}
+          <input type="radio" name="theme" value={{ $element }} checked /> {{ $element }} <br/>
+          {{ else }}
+          <input type="radio" name="theme" value={{ $element }} /> {{ $element }} <br/>
+          {{ end }}
+        {{ end }}
+        <br/>
+        <button class="btn btn-default" type="submit">Generate resume</button>
+      </form>
+    </div>
   </body>
 </html>
 
