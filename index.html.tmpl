@@ -7,23 +7,34 @@
   </head>
   <body>
     <div class="container">
-      <h1>LinkedIn Resume Generator</h1>
-      <form action="/resume" method="POST">
-        <label>LinkedIn profile URL</label>
-        <input type="text" class="form-control" placeholder="LinkedIn profile URL" name="url" value="https://www.linkedin.com/in/azylman" />
-        <br/>
-        <label>Theme</label><br/>
-        {{ range $index, $element := .Themes }}
-          {{ if eq $index 0 }}
-          <input type="radio" name="theme" value={{ $element }} checked /> {{ $element }} <br/>
-          {{ else }}
-          <input type="radio" name="theme" value={{ $element }} /> {{ $element }} <br/>
-          {{ end }}
-        {{ end }}
-        <br/>
-        <button class="btn btn-default" type="submit">Generate resume</button>
+      <form class="form-horizontal" action="/resume" method="POST">
+        <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-10">
+            <h1>LinkedIn Resume Generator</h1>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label">LinkedIn profile URL</label>
+          <div class="col-sm-10">
+            <input type="text" class="form-control" placeholder="LinkedIn profile URL" name="url" value="https://www.linkedin.com/in/azylman" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label">Theme</label>
+          <div class="col-sm-10">
+            <select class="form-control" name="theme">
+            {{ range .Themes }}
+              <option value={{ . }} /> {{ . }} </option>
+            {{ end }}
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-10">
+            <button class="btn btn-default" type="submit">Generate resume</button>
+          </div>
+        </div>
       </form>
     </div>
   </body>
 </html>
-
