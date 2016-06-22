@@ -7,7 +7,9 @@
   <body>
     <form action="/resume" method="POST">
       <input type="text" name="url" value="https://www.linkedin.com/in/azylman" />
-      <input type="radio" name="theme" value="flat" checked/> Flat
+      {{ range .Themes }}
+      <input type="radio" name="theme" value={{ . }} /> {{ . }}
+      {{ end }}
       <input type="submit" value="Generate resume">
     </form>
   </body>

@@ -286,6 +286,25 @@ func resumeForURL(url string) (goresume.Resume, error) {
 	return resume, nil
 }
 
+func fetchThemes() ([]string, error) {
+	doc, err := goquery.NewDocument("https://jsonresume.org/themes")
+	if err != nil {
+		return nil, err
+	}
+
+	themes := []string{}
+	doc.Find("#themes .theme").Each(func(i int, s *goquery.Selection) {
+		theme := s.Find(".col-sm-12.col-xs-6 a").First()
+		link, ok := theme.Attr("href")
+		if !ok {
+			return
+		}
+		themes = append(themes, strings.TrimPrefix(link, "http://themes.jsonresume.org/theme/"))
+	})
+
+	return themes, err
+}
+
 func main() {
 	port := flag.String("port", "8080", "port to listen on")
 	flag.Parse()
@@ -342,12 +361,19 @@ func main() {
 	})).Methods("POST")
 
 	r.HandleFunc("/", errHandler(func(w http.ResponseWriter, r *http.Request) error {
+		themes, err := fetchThemes()
+		if err != nil {
+			return err
+		}
+
 		temp, err := template.ParseFiles("./index.html.tmpl")
 		if err != nil {
 			return err
 		}
 
-		return temp.Execute(w, nil)
+		return temp.Execute(w, struct {
+			Themes []string
+		}{Themes: themes})
 	}))
 
 	http.Handle("/", r)
