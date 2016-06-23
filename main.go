@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	goresume "github.com/azylman/gopher-resume"
 	"github.com/gorilla/mux"
+	goresume "github.com/nii236/gopher-resume/models"
 )
 
 func errHandler(f func(http.ResponseWriter, *http.Request) error) func(http.ResponseWriter, *http.Request) {
